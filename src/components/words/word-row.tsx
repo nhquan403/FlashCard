@@ -10,7 +10,12 @@ interface WordRowProps {
 export default function WordRow({ word, onEdit, onDelete }: WordRowProps) {
   return (
     <div className="group flex items-center gap-4 py-3 px-4 border-b border-gray-800 hover:bg-gray-900/50">
-      <span className="font-bold text-gray-100 min-w-[120px] shrink-0">{word.word}</span>
+      <div className="min-w-[120px] shrink-0">
+        <span className="font-bold text-gray-100">{word.word}</span>
+        {word.pronunciation && (
+          <div className="text-gray-500 text-xs font-mono">{word.pronunciation}</div>
+        )}
+      </div>
       <span
         className="text-gray-400 flex-1 truncate text-sm"
         title={word.description}

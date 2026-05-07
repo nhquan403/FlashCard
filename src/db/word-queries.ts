@@ -14,12 +14,14 @@ export async function getWordsDueToday(folderId: number): Promise<Word[]> {
 export async function createWord(
   folderId: number,
   word: string,
-  description: string
+  description: string,
+  pronunciation?: string
 ): Promise<number> {
   return db.words.add({
     folderId,
     word,
     description,
+    ...(pronunciation ? { pronunciation } : {}),
     easeFactor: 2.5,
     interval: 1,
     repetitions: 0,
@@ -29,14 +31,14 @@ export async function createWord(
 
 export async function updateWord(
   id: number,
-  patch: Partial<Pick<Word, 'word' | 'description'>>
+  patch: Partial<Pick<Word, 'word' | 'description' | 'pronunciation'>>
 ): Promise<void> {
   await db.words.update(id, patch);
 }
 
 export async function bulkCreateWords(
   folderId: number,
-  items: Array<{ word: string; description: string }>
+  items: Array<{ word: string; description: string; pronunciation?: string }>
 ): Promise<void> {
   try {
     await db.transaction('rw', db.words, async () => {
@@ -44,6 +46,7 @@ export async function bulkCreateWords(
         folderId,
         word: item.word,
         description: item.description,
+        ...(item.pronunciation ? { pronunciation: item.pronunciation } : {}),
         easeFactor: 2.5,
         interval: 1,
         repetitions: 0,

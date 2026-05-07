@@ -15,6 +15,7 @@ export interface Word {
   repetitions: number;
   nextReview: Date;
   lastReview?: Date;
+  pronunciation?: string;
 }
 
 export interface StudySession {

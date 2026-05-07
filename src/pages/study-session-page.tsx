@@ -169,6 +169,7 @@ export default function StudySessionPage() {
                 description={card.description}
                 isFlipped={isFlipped}
                 onClick={() => setIsFlipped(!isFlipped)}
+                pronunciation={card.pronunciation}
               />
             </SwipeCard>
 

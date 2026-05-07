@@ -1,7 +1,7 @@
 const DELIMITERS = [' - ', '\t', ':'];
 
 export interface ParseWordImportResult {
-  pairs: Array<{ word: string; description: string }>;
+  pairs: Array<{ word: string; description: string; pronunciation?: string }>;
   skipped: number;
   detectedDelimiter: string;
 }
@@ -23,7 +23,7 @@ export function parseWordImport(text: string): ParseWordImportResult {
     return { pairs: [], skipped: 0, detectedDelimiter: DELIMITERS[0] };
   }
 
-  // Pick delimiter that splits the most lines into 2 non-empty parts
+  // Pick delimiter that splits the most lines into 2+ non-empty parts
   let bestDelimiter = DELIMITERS[0];
   let bestCount = -1;
   for (const delimiter of DELIMITERS) {
@@ -34,22 +34,23 @@ export function parseWordImport(text: string): ParseWordImportResult {
     }
   }
 
-  const pairs: Array<{ word: string; description: string }> = [];
+  const pairs: Array<{ word: string; description: string; pronunciation?: string }> = [];
   let skipped = 0;
 
   for (const line of rawLines) {
-    const idx = line.indexOf(bestDelimiter);
-    if (idx === -1) {
-      skipped++;
-      continue;
-    }
-    const word = line.slice(0, idx).trim();
-    const description = line.slice(idx + bestDelimiter.length).trim();
+    // Split into exactly: word | description | pronunciation (join any extra parts into pronunciation)
+    const rawParts = line.split(bestDelimiter);
+    const word = rawParts[0]?.trim() ?? '';
+    const description = rawParts[1]?.trim() ?? '';
+    const pronunciation = rawParts.length >= 3
+      ? rawParts.slice(2).join(bestDelimiter).trim() || undefined
+      : undefined;
+
     if (!word || !description) {
       skipped++;
       continue;
     }
-    pairs.push({ word, description });
+    pairs.push({ word, description, ...(pronunciation ? { pronunciation } : {}) });
   }
 
   return { pairs, skipped, detectedDelimiter: bestDelimiter };

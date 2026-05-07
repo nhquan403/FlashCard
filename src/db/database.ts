@@ -13,6 +13,12 @@ export class AppDatabase extends Dexie {
       words: '++id, folderId, nextReview',
       sessions: '++id, folderId, date',
     });
+    // v2: adds unindexed `pronunciation` field to words (no migration needed)
+    this.version(2).stores({
+      folders: '++id, name, createdAt',
+      words: '++id, folderId, nextReview',
+      sessions: '++id, folderId, date',
+    });
   }
 }
 

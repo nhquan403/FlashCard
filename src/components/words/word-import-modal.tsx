@@ -16,7 +16,7 @@ export default function WordImportModal({ folderId, onClose }: WordImportModalPr
   const [step, setStep] = useState<Step>('input');
   const [text, setText] = useState('');
   const [delimiterHint, setDelimiterHint] = useState('');
-  const [parsed, setParsed] = useState<{ pairs: Array<{ word: string; description: string }>; skipped: number }>({ pairs: [], skipped: 0 });
+  const [parsed, setParsed] = useState<{ pairs: Array<{ word: string; description: string; pronunciation?: string }>; skipped: number }>({ pairs: [], skipped: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -117,16 +117,20 @@ export default function WordImportModal({ folderId, onClose }: WordImportModalPr
                 <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-gray-800">
                     <tr>
-                      <th className="text-left px-3 py-2 text-gray-400 font-medium w-1/3">Word</th>
+                      <th className="text-left px-3 py-2 text-gray-400 font-medium w-1/4">Word</th>
                       <th className="text-left px-3 py-2 text-gray-400 font-medium">Description</th>
+                      <th className="text-left px-3 py-2 text-gray-400 font-medium w-1/4">Pronunciation</th>
                     </tr>
                   </thead>
                   <tbody>
                     {parsed.pairs.map((pair, i) => (
                       <tr key={i} className="border-t border-gray-800">
                         <td className="px-3 py-2 text-gray-100 font-medium">{pair.word}</td>
-                        <td className="px-3 py-2 text-gray-400 truncate max-w-[200px]" title={pair.description}>
+                        <td className="px-3 py-2 text-gray-400 truncate max-w-[160px]" title={pair.description}>
                           {pair.description}
+                        </td>
+                        <td className="px-3 py-2 text-gray-500 font-mono text-xs truncate" title={pair.pronunciation}>
+                          {pair.pronunciation ?? '—'}
                         </td>
                       </tr>
                     ))}

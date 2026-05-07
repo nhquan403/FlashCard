@@ -1,14 +1,17 @@
 import { useReducedMotion } from 'framer-motion';
+import { speak } from '../../lib/tts';
 
 interface FlipCardProps {
   word: string;
   description: string;
   isFlipped: boolean;
   onClick: () => void;
+  pronunciation?: string;
 }
 
-export default function FlipCard({ word, description, isFlipped, onClick }: FlipCardProps) {
+export default function FlipCard({ word, description, isFlipped, onClick, pronunciation }: FlipCardProps) {
   const prefersReduced = useReducedMotion() ?? false;
+  const hasTTS = typeof window !== 'undefined' && !!window.speechSynthesis;
 
   return (
     <div
@@ -30,6 +33,29 @@ export default function FlipCard({ word, description, isFlipped, onClick }: Flip
           <span className="text-[clamp(1.4rem,5vw,2rem)] font-bold text-gray-100 leading-tight px-4 text-center">
             {word}
           </span>
+          {pronunciation && (
+            <span className="text-gray-400 text-sm font-mono mt-1">{pronunciation}</span>
+          )}
+          {hasTTS && (
+            <div className="flex gap-3 mt-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); speak(word, 1.0); }}
+                className="p-1.5 text-gray-400 hover:text-gray-100 transition-colors"
+                aria-label="Speak normal speed"
+                title="Normal speed"
+              >
+                🔊
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); speak(word, 0.4); }}
+                className="p-1.5 text-gray-400 hover:text-gray-100 transition-colors"
+                aria-label="Speak slow speed"
+                title="Slow speed"
+              >
+                🐢
+              </button>
+            </div>
+          )}
           {!isFlipped && (
             <span className="text-gray-500 text-sm mt-4">Tap to flip</span>
           )}
