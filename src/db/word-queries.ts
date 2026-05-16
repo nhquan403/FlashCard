@@ -11,6 +11,14 @@ export async function getWordsDueToday(folderId: number): Promise<Word[]> {
   return words.filter((w) => w.nextReview <= now);
 }
 
+// Words with low SRS mastery that have been reviewed at least once.
+// Excludes brand-new unreviewed cards (lastReview == null) to avoid
+// flooding the badge/mode with cards the user hasn't seen yet.
+export async function getStrugglingWords(folderId: number): Promise<Word[]> {
+  const words = await db.words.where('folderId').equals(folderId).toArray();
+  return words.filter((w) => w.lastReview != null && (w.repetitions < 2 || w.easeFactor < 2.0));
+}
+
 export async function createWord(
   folderId: number,
   word: string,

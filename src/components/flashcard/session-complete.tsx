@@ -3,9 +3,10 @@ interface SessionCompleteProps {
   forgot: number;
   onRestart: () => void;
   onBack: () => void;
+  onStudyStruggling?: () => void;
 }
 
-export default function SessionComplete({ known, forgot, onRestart, onBack }: SessionCompleteProps) {
+export default function SessionComplete({ known, forgot, onRestart, onBack, onStudyStruggling }: SessionCompleteProps) {
   const total = known + forgot;
   const successRate = total > 0 ? Math.round((known / total) * 100) : 0;
 
@@ -33,15 +34,23 @@ export default function SessionComplete({ known, forgot, onRestart, onBack }: Se
         </div>
 
         <div className="flex flex-col gap-3">
+          {onStudyStruggling && (
+            <button
+              onClick={onStudyStruggling}
+              className="w-full min-h-[48px] py-3 rounded-2xl bg-orange-600 hover:bg-orange-500 text-white font-semibold transition-colors touch-manipulation"
+            >
+              Re-study Forgotten ({forgot})
+            </button>
+          )}
           <button
             onClick={onRestart}
-            className="w-full sm:w-auto min-h-[48px] py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors touch-manipulation"
+            className="w-full min-h-[48px] py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-semibold transition-colors touch-manipulation"
           >
             Study Again
           </button>
           <button
             onClick={onBack}
-            className="w-full sm:w-auto min-h-[48px] py-3 rounded-2xl bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold transition-colors touch-manipulation"
+            className="w-full min-h-[48px] py-3 rounded-2xl bg-gray-700 hover:bg-gray-600 text-gray-100 font-semibold transition-colors touch-manipulation"
           >
             Back to Folder
           </button>

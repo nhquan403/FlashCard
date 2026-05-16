@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { ChevronRight, Plus, Upload, BookOpen, Home } from 'lucide-react';
 import { db } from '../db/database';
-import { deleteWord } from '../db/queries';
+import { deleteWord, getStrugglingWords } from '../db/queries';
 import { useWords } from '../hooks/use-words';
 import WordList from '../components/words/word-list';
 import WordAddEditModal from '../components/words/word-add-edit-modal';
@@ -23,6 +23,10 @@ export default function FolderDetailPage() {
 
   const folder = useLiveQuery(() => db.folders.get(folderId), [folderId]);
   const words = useWords(folderId) ?? [];
+  const strugglingCount = useLiveQuery(
+    () => getStrugglingWords(folderId).then((w) => w.length),
+    [folderId]
+  ) ?? 0;
   const [modal, setModal] = useState<ModalState>({ type: 'none' });
 
   const closeModal = () => setModal({ type: 'none' });
@@ -78,7 +82,7 @@ export default function FolderDetailPage() {
               className="bg-gray-700 hover:bg-gray-600 text-gray-100 px-3 py-2 min-h-[40px] rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors touch-manipulation"
             >
               <Upload size={14} />
-              Import
+              Bulk Import
             </button>
             <button
               onClick={() => setModal({ type: 'add' })}
@@ -94,6 +98,11 @@ export default function FolderDetailPage() {
             >
               <BookOpen size={14} />
               Study
+              {strugglingCount > 0 && (
+                <span className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold leading-none">
+                  {strugglingCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

@@ -8,6 +8,7 @@ export {
 export {
   getWordsByFolder,
   getWordsDueToday,
+  getStrugglingWords,
   createWord,
   updateWord,
   bulkCreateWords,
