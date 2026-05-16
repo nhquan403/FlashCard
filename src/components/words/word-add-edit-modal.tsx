@@ -5,6 +5,7 @@ import { createWord, updateWord, bulkCreateWords } from '../../db/queries';
 import type { Word } from '../../types';
 import ResponsiveSheet from '../ui/responsive-sheet';
 import MultiWordRow, { type RowData } from './multi-word-row';
+import WordSingleFields from './word-single-fields';
 
 interface WordAddEditModalProps {
   word?: Word;
@@ -21,14 +22,10 @@ function makeRow(): RowData {
 export default function WordAddEditModal({ word, folderId, onClose }: WordAddEditModalProps) {
   const isEdit = Boolean(word);
 
-  // Single mode state
   const [wordText, setWordText] = useState(word?.word ?? '');
   const [description, setDescription] = useState(word?.description ?? '');
   const [pronunciation, setPronunciation] = useState(word?.pronunciation ?? '');
-
-  // Multi mode state
   const [rows, setRows] = useState<RowData[]>([makeRow()]);
-
   const [mode, setMode] = useState<Mode>('single');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,9 +48,7 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
     setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
   };
 
-  const handleAddRow = () => {
-    setRows((prev) => [...prev, makeRow()]);
-  };
+  const handleAddRow = () => setRows((prev) => [...prev, makeRow()]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,15 +59,10 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
       const trimmedDesc = description.trim();
       if (!trimmedWord) { setError('Word is required.'); return; }
       if (!trimmedDesc) { setError('Description is required.'); return; }
-
       setLoading(true);
       try {
         if (isEdit && word?.id != null) {
-          await updateWord(word.id, {
-            word: trimmedWord,
-            description: trimmedDesc,
-            pronunciation: pronunciation.trim() || undefined,
-          });
+          await updateWord(word.id, { word: trimmedWord, description: trimmedDesc, pronunciation: pronunciation.trim() || undefined });
         } else {
           await createWord(folderId, trimmedWord, trimmedDesc, pronunciation.trim() || undefined);
         }
@@ -85,23 +75,18 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
       return;
     }
 
-    // Multi mode
     const validRows = rows.filter((r) => r.word.trim() && r.description.trim());
     if (validRows.length === 0) {
       setError('At least one row with a word and description is required.');
       return;
     }
-
     setLoading(true);
     try {
-      await bulkCreateWords(
-        folderId,
-        validRows.map((r) => ({
-          word: r.word.trim(),
-          description: r.description.trim(),
-          ...(r.pronunciation.trim() ? { pronunciation: r.pronunciation.trim() } : {}),
-        }))
-      );
+      await bulkCreateWords(folderId, validRows.map((r) => ({
+        word: r.word.trim(),
+        description: r.description.trim(),
+        ...(r.pronunciation.trim() ? { pronunciation: r.pronunciation.trim() } : {}),
+      })));
       onClose();
     } catch {
       setError('Something went wrong. Please try again.');
@@ -110,10 +95,13 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
     }
   };
 
+  const validCount = mode === 'multi'
+    ? rows.filter((r) => r.word.trim() && r.description.trim()).length
+    : 0;
+
   return (
     <AnimatePresence>
       <ResponsiveSheet onClose={onClose} ariaLabel="word form">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 pt-4 pb-1 mb-2">
           <h2 className="text-gray-100 text-lg font-semibold">
             {isEdit ? 'Edit Word' : 'Add Word'}
@@ -126,7 +114,6 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
           </button>
         </div>
 
-        {/* Mode tabs — only in add mode */}
         {!isEdit && (
           <div className="flex gap-1 px-6 mb-4">
             {(['single', 'multi'] as const).map((m) => (
@@ -147,65 +134,30 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 pb-6">
-          {/* Single / Edit form */}
           {(mode === 'single' || isEdit) && (
-            <>
-              <div className="flex flex-col gap-1.5">
-                <label className="text-gray-300 text-sm font-medium" htmlFor="word-text">
-                  Word <span className="text-red-400">*</span>
-                </label>
-                <input
-                  id="word-text"
-                  type="text"
-                  value={wordText}
-                  onChange={(e) => { setWordText(e.target.value); setError(''); }}
-                  placeholder="e.g. ephemeral"
-                  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-blue-500 w-full placeholder-gray-500"
-                  autoFocus
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-gray-300 text-sm font-medium" htmlFor="word-desc">
-                  Description <span className="text-red-400">*</span>
-                </label>
-                <textarea
-                  id="word-desc"
-                  value={description}
-                  onChange={(e) => { setDescription(e.target.value); setError(''); }}
-                  placeholder="e.g. lasting for a very short time"
-                  rows={3}
-                  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-blue-500 w-full placeholder-gray-500 resize-none"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-gray-300 text-sm font-medium" htmlFor="word-pronunciation">
-                  Pronunciation <span className="text-gray-500 font-normal">(optional)</span>
-                </label>
-                <input
-                  id="word-pronunciation"
-                  type="text"
-                  value={pronunciation}
-                  onChange={(e) => { setPronunciation(e.target.value); setError(''); }}
-                  placeholder="e.g. /ɪˈfem.ər.əl/"
-                  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-gray-100 focus:outline-none focus:border-blue-500 w-full placeholder-gray-500"
-                />
-              </div>
-            </>
+            <WordSingleFields
+              wordText={wordText}
+              description={description}
+              pronunciation={pronunciation}
+              onWordChange={setWordText}
+              onDescChange={setDescription}
+              onPronunciationChange={setPronunciation}
+              onClearError={() => setError('')}
+            />
           )}
 
-          {/* Multi mode rows */}
           {mode === 'multi' && !isEdit && (
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
-                {rows.map((row) => (
+                {rows.map((row, i) => (
                   <MultiWordRow
                     key={row.id}
                     row={row}
                     isOnly={rows.length === 1}
+                    isLast={i === rows.length - 1}
                     onChange={handleRowChange}
                     onRemove={handleRowRemove}
+                    onAddRow={handleAddRow}
                   />
                 ))}
               </div>
@@ -222,7 +174,12 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
 
           {error && <p className="text-red-400 text-sm">{error}</p>}
 
-          <div className="flex justify-end gap-2 pt-1">
+          <div className="flex items-center justify-end gap-3 pt-1">
+            {mode === 'multi' && validCount > 0 && (
+              <span className="text-sm text-gray-400 mr-auto">
+                {validCount} ready
+              </span>
+            )}
             <button
               type="button"
               onClick={onClose}
@@ -235,7 +192,13 @@ export default function WordAddEditModal({ word, folderId, onClose }: WordAddEdi
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Saving…' : isEdit ? 'Save Changes' : mode === 'multi' ? 'Add Words' : 'Add Word'}
+              {loading
+                ? 'Saving…'
+                : isEdit
+                  ? 'Save Changes'
+                  : mode === 'multi'
+                    ? (validCount > 0 ? `Add ${validCount} Word${validCount !== 1 ? 's' : ''}` : 'Add Words')
+                    : 'Add Word'}
             </button>
           </div>
         </form>

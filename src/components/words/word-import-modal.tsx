@@ -23,9 +23,9 @@ export default function WordImportModal({ folderId, onClose }: WordImportModalPr
   const handleTextChange = (value: string) => {
     setText(value);
     if (value.trim()) {
-      const { detectedDelimiter } = parseWordImport(value);
+      const { detectedDelimiter, pairs } = parseWordImport(value);
       const label = detectedDelimiter === '\t' ? 'tab' : `"${detectedDelimiter}"`;
-      setDelimiterHint(`Detected delimiter: ${label}`);
+      setDelimiterHint(`Detected: ${label} · ${pairs.length} word${pairs.length !== 1 ? 's' : ''}`);
     } else {
       setDelimiterHint('');
     }

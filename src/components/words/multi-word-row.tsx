@@ -10,11 +10,20 @@ export interface RowData {
 interface MultiWordRowProps {
   row: RowData;
   isOnly: boolean;
+  isLast: boolean;
   onChange: (id: string, field: keyof Omit<RowData, 'id'>, value: string) => void;
   onRemove: (id: string) => void;
+  onAddRow: () => void;
 }
 
-export default function MultiWordRow({ row, isOnly, onChange, onRemove }: MultiWordRowProps) {
+export default function MultiWordRow({ row, isOnly, isLast, onChange, onRemove, onAddRow }: MultiWordRowProps) {
+  const handlePronunciationKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Tab' && !e.shiftKey && isLast) {
+      e.preventDefault();
+      onAddRow();
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2 p-3 bg-gray-800 border border-gray-700 rounded-lg">
       <div className="flex gap-2">
@@ -46,7 +55,8 @@ export default function MultiWordRow({ row, isOnly, onChange, onRemove }: MultiW
         type="text"
         value={row.pronunciation}
         onChange={(e) => onChange(row.id, 'pronunciation', e.target.value)}
-        placeholder="Pronunciation (optional)"
+        onKeyDown={handlePronunciationKeyDown}
+        placeholder="Pronunciation (optional) — Tab to add next row"
         className="bg-gray-900 border border-gray-700 rounded px-2 py-1.5 text-gray-100 text-sm focus:outline-none focus:border-blue-500 placeholder-gray-500"
       />
     </div>
